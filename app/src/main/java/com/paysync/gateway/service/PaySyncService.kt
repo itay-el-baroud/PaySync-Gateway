@@ -53,8 +53,18 @@ class PaySyncService : Service() {
             val client = OkHttpClient.Builder().callTimeout(15, TimeUnit.SECONDS).build()
             for (item in pending) {
                 try {
+                    // Double-check sender still authorized on retry (prevent tampered DB)
+                    if (!com.paysync.gateway.util.SenderValidator.isAuthorized(item.sender)) {
+                        db.transactionDao().updateStatus(item.id, "rejected", "Unauthorized Sender ID on retry")
+                        continue
+                    }
                     val json = JSONObject().apply {
-                        put("sender", item.sender); put("message", item.rawMessage); put("amount", item.amount); put("phone", item.phone); put("timestamp", item.timestamp); put("retry", true)
+                        put("sender_name", item.sender)
+                        put("phone_number", item.phone ?: "")
+                        put("amount", item.amount ?: "")
+                        put("raw_message", item.rawMessage)
+                        put("timestamp", item.timestamp)
+                        put("retry", true)
                     }
                     val body = json.toString().toRequestBody("application/json".toMediaType())
                     val req = Request.Builder().url(url).post(body).build()
