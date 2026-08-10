@@ -10,9 +10,9 @@ interface TransactionDao {
     suspend fun insert(entity: TransactionEntity): Long
     @Query("SELECT * FROM transactions ORDER BY timestamp DESC")
     fun getAllFlow(): Flow<List<TransactionEntity>>
-    @Query("SELECT * FROM transactions WHERE status = 'pending' ORDER BY timestamp ASC")
+    @Query("SELECT * FROM transactions WHERE txn_status = 'pending' ORDER BY timestamp ASC")
     suspend fun getPending(): List<TransactionEntity>
-    @Query("UPDATE transactions SET status = :status, response = :response WHERE id = :id")
+    @Query("UPDATE transactions SET txn_status = :status, response = :response WHERE id = :id")
     suspend fun updateStatus(id: Long, status: String, response: String?)
     @Query("DELETE FROM transactions")
     suspend fun clearAll()
